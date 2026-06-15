@@ -1,0 +1,50 @@
+services:
+  opa:
+    image: openpolicyagent/opa:0.68.0
+    container_name: opa
+    ports:
+      - "8181:8181"
+    command:
+      - "run"
+      - "--server"
+      - "--log-level=info"
+      - "--addr=0.0.0.0:8181"
+      - "/policies"
+    volumes:
+      - ./policies:/policies:ro
+
+  serviceb:
+    build:
+      context: .
+      dockerfile: services/ServiceB.FhirReceiver/Dockerfile
+    container_name: serviceb
+    depends_on:
+      - opa
+    environment:
+      # Point Service B at the OPA container (compose DNS name).
+      Opa__Url: "http://opa:8181"
+      Opa__PolicyPath: "fhir/log_mask/decision"
+    ports:
+      - "5002:5002"
+
+  servicea:
+    build:
+      context: .
+      dockerfile: services/ServiceA.FhirSender/Dockerfile
+    container_name: servicea
+    depends_on:
+      - serviceb
+    environment:
+      SAMPLE_FILE: "/data/patient.json"
+      SERVICE_B_URL: "http://serviceb:5002"
+      # Point Service A's OpaMaskingHandler at the OPA container (compose DNS name).
+      OPA_URL: "http://opa:8181"
+      # Transit policy keeps the FHIR document schema-valid on the wire
+      # (no "REDACTED" written into typed fields like birthDate).
+      # Service B uses the stricter fhir.log_mask policy at log time.
+      OPA_POLICY: "fhir/transit_mask/decision"
+    volumes:
+      - ./sample-data:/data:ro
+    # Service A is a one-shot job. Run it on demand with:
+    #   docker compose run --rm servicea
+    profiles: ["sender"]

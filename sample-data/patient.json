@@ -1,0 +1,25 @@
+{
+  "resourceType": "Patient",
+  "id": "p-001",
+  "identifier": [
+    { "system": "http://hospital.example.org/mrn", "value": "MRN-987654" }
+  ],
+  "active": true,
+  "name": [
+    { "family": "Doe", "given": [ "John", "Q" ] }
+  ],
+  "telecom": [
+    { "system": "phone", "use": "home", "value": "+1-555-867-5309" },
+    { "system": "email", "use": "work", "value": "john.doe@example.com" }
+  ],
+  "gender": "male",
+  "birthDate": "1980-04-12",
+  "address": [
+    {
+      "line": [ "742 Evergreen Terrace" ],
+      "city": "Springfield",
+      "postalCode": "49007",
+      "country": "US"
+    }
+  ]
+}
